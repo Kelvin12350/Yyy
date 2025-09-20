@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mega AI Chat</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{font-family:sans-serif;background:#282a36;color:#fff;overflow:hidden}
+#chat-container{height:80vh;overflow-y:auto;padding:1rem}
+.message{margin-bottom:1rem;padding:0.75rem;border-radius:0.5rem;max-width:70%}
+.user{background:#9f7aea;margin-left:auto}
+.ai{background:#3b3d52;margin-right:auto}
+textarea{width:100%;padding:0.5rem;border-radius:0.5rem;background:#3b3d52;color:#fff;border:none;resize:none}
+button{padding:0.5rem 1rem;border-radius:0.5rem;background:#9f7aea;color:#fff;border:none;margin-left:0.5rem}
+</style>
+</head>
+<body>
+<div id="chat-container"></div>
+<div style="display:flex;gap:0.5rem;padding:1rem">
+<textarea id="prompt-input" rows="2" placeholder="Message Mega..."></textarea>
+<button id="send-button">Send</button>
+</div>
+
+<script>
+const chatContainer=document.getElementById("chat-container");
+const promptInput=document.getElementById("prompt-input");
+const sendButton=document.getElementById("send-button");
+
+// Replace with your deployed Vercel serverless URL
+const PROXY_URL="https://yourproject.vercel.app/api/ask";
+
+function appendMessage(sender,text){
+  const div=document.createElement("div");
+  div.className="message "+sender;
+  div.innerHTML=text.replace(/\n/g,"<br>");
+  chatContainer.appendChild(div);
+  chatContainer.scrollTop=chatContainer.scrollHeight;
+}
+
+async function sendMessage(){
+  const prompt=promptInput.value.trim();
+  if(!prompt)return;
+  appendMessage("user",prompt);
+  promptInput.value="";
+  appendMessage("ai","...");
+
+  try{
+    const res=await fetch(PROXY_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt})
+    });
+    const data=await res.json();
+    document.querySelectorAll(".ai").forEach((el,i)=>{if(i===document.querySelectorAll(".ai").length-1) el.innerHTML=data.response});
+  }catch(err){
+    document.querySelectorAll(".ai").forEach((el,i)=>{if(i===document.querySelectorAll(".ai").length-1) el.innerHTML="Error: "+err.message});
+  }
+}
+
+sendButton.addEventListener("click",sendMessage);
+promptInput.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}});
+</script>
+</body>
+</html>
